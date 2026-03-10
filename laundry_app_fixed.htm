@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MSU Laundry</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* MSU Brand Colors */
+            --msu-green: #18453B;
+            --msu-green-dark: #0d2e26;
+            --white: #ffffff;
+            
+            /* App Theme Colors */
+            --app-gradient-top: #3b6a83;
+            --app-gradient-bottom: #97e2b7;
+            --primary-blue: #3030d6;
+            --primary-light: #eef2ff;
+            --status-green: #4caf50;
+            --status-yellow: #ff9800;
+            --status-red: #f44336;
+            --text-dark: #222;
+            --text-gray: #666;
+            --card-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--app-gradient-top) 0%, var(--app-gradient-bottom) 100%);
+            overflow-x: hidden;
+            overscroll-behavior-y: none;
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        /* --- Utilities --- */
+        .hidden { display: none !important; }
+        .flex-center { display: flex; justify-content: center; align-items: center; }
+        .text-center { text-align: center; }
+        .w-100 { width: 100%; }
+        
+        /* =========================================
+           AUTH SCREENS (Hidden by default)
+           ========================================= */
+        #auth-section {
+            background: linear-gradient(135deg, var(--msu-green) 0%, #103029 100%);
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .brand-logo { font-size: 60px; margin-bottom: 10px; color: white; }
+        .brand-text { font-size: 26px; font-weight: 700; margin-bottom: 30px; letter-spacing: 0.5px; color: white; }
+
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px 25px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            color: var(--text-dark);
+        }
+
+        .auth-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        .form-input { width: 100%; padding: 14px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none; transition: border 0.2s; }
+        .form-input:focus { border-color: var(--msu-green); }
+
+        .btn-msu {
+            background-color: var(--msu-green);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            transition: background 0.2s;
+        }
+        .btn-msu:active { transform: scale(0.98); }
+        .auth-link { display: block; text-align: center; font-size: 13px; color: var(--text-dark); cursor: pointer; margin-top: 10px; }
+        .auth-link strong { color: var(--msu-green); }
+
+
+        /* =========================================
+           MAIN APP STYLES
+           ========================================= */
+        .app-container {
+            padding: 20px 20px 0 20px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        .app-header { text-align: center; color: white; margin-bottom: 20px; position: relative; z-index: 100; }
+        .view-title { font-size: 22px; font-weight: 600; margin-bottom: 15px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .card { 
+            background: white; 
+            border-radius: 24px; 
+            padding: 20px; 
+            box-shadow: var(--card-shadow); 
+            margin-bottom: 15px; 
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- HOME: Location Dropdown --- */
+        .location-wrapper { position: relative; display: inline-block; }
+        .location-selector { font-size: 24px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; justify-content: center; }
+        
+        .dropdown-menu { 
+            display: none; 
+            position: absolute; 
+            top: 110%; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: white; 
+            color: #333; 
+            width: 280px; 
+            max-height: 50vh; 
+            overflow-y: auto; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4); 
+            text-align: left; 
+            z-index: 200; 
+        }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item { padding: 14px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 15px; }
+
+        /* --- HOME: Tabs --- */
+        .tabs-pill { display: flex; border: 1px solid #ddd; border-radius: 30px; padding: 3px; margin-bottom: 20px; }
+        .tab-pill { flex: 1; padding: 8px; text-align: center; border-radius: 25px; cursor: pointer; font-size: 15px; font-weight: 500; color: #555; transition: 0.2s; }
+        .tab-pill.active { background: var(--primary-blue); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* --- HOME: Date Scroller --- */
+        h3 { font-size: 16px; font-weight: 600; margin: 0 0 10px 0; color: var(--text-dark); }
+        .date-scroller { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; padding-top: 10px; scrollbar-width: none; margin-bottom: 15px; }
+        .date-scroller::-webkit-scrollbar { display: none; }
+        
+        .date-card { 
+            background: #f4f6f8; 
+            border-radius: 12px; 
+            min-width: 65px; 
+            padding: 10px 5px; 
+            text-align: center; 
+            cursor: pointer; 
+            border: 1px solid transparent; 
+            transition: all 0.2s;
+            position: relative; /* Essential for relative overlay */
+        }
+        .date-card.active { background: var(--primary-blue); color: white; box-shadow: 0 4px 10px rgba(48, 48, 214, 0.3); transform: translateY(-2px); }
+        .date-day { font-size: 12px; margin-bottom: 4px; font-weight: 500; }
+        .date-num { font-size: 19px; font-weight: 700; }
+
+        /* --- HOME: Time Grid --- */
+        .time-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .time-slot { background: #f4f6f8; border: 1px solid #eee; border-radius: 8px; padding: 10px 2px; font-size: 12px; text-align: center; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .time-slot.active { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
+        .time-slot.disabled { opacity: 0.5; pointer-events: none; background: #eee; }
+
+        /* --- HOME: Interest Box --- */
+        .interest-box { 
+            background: var(--primary-light); 
+            color: var(--primary-blue); 
+            padding: 12px; 
+            border-radius: 12px; 
+            font-size: 13px; 
+            text-align: center; 
+            margin-bottom: 20px; 
+            display: none; 
+            border: 1px solid #dbeafe; 
+        }
+
+        /* --- NOTIFICATION TOAST --- */
+        .toast-notification {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            left: 20px;
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 0; /* Changed to 0 as requested */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid #f0f0f0;
+        }
+        .toast-notification.show { transform: translateY(0); }
+        .toast-content { font-size: 14px; color: #333; line-height: 1.4; }
+        .toast-btn { 
+            background: var(--primary-blue); 
+            color: white; 
+            border: none; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 13px; 
+            font-weight: 600; 
+            white-space: nowrap; 
+            cursor: pointer;
+        }
+        .toast-close { color: #999; font-size: 16px; cursor: pointer; padding: 5px; }
+
+        /* --- MODAL (Shared) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-card {
+            background: white;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 24px;
+            padding: 25px;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-overlay.show .modal-card { transform: scale(1); }
+
+        .crowd-btn-group { display: flex; gap: 8px; margin: 15px 0; }
+        .crowd-btn { flex: 1; padding: 10px; border-radius: 12px; border: 1px solid #ddd; background: #f9f9f9; font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .crowd-btn.selected { border-width: 2px; background: #fff; }
+        
+        .timer-input-group { margin: 15px 0; display: flex; gap: 10px; align-items: center; justify-content: center; }
+        .timer-input { width: 60px; padding: 8px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; text-align: center; }
+
+        /* =========================================
+           NEW ACTIVITY DASHBOARD STYLES
+           ========================================= */
+
+        /* Sticky Nav in Activity View */
+        .activity-nav {
+            display: flex;
+            border: 1px solid #e0e7ff;
+            background: rgba(248, 250, 255, 0.95); /* Slightly transparent */
+            backdrop-filter: blur(10px); /* Blur effect */
+            border-radius: 30px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: sticky; /* Sticky positioning */
+            top: 20px; /* Offset from top */
+            z-index: 100; /* Layer above content */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .activity-nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .activity-nav-item.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        /* Section Styling */
+        .section-wrapper {
+            margin-bottom: 30px;
+            scroll-margin-top: 100px; /* Offset for scroll */
+        }
+
+        .section-header {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Current Timer Card Styling */
+        .active-timer-card {
+            background: #f8faff;
+            border: 1px solid #e0e7ff;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .timer-badge { 
+            position: absolute; top: 10px; right: 10px; 
+            background: #e0f2f1; color: #00695c; 
+            padding: 4px 10px; border-radius: 12px; 
+            font-size: 11px; font-weight: 600; 
+        }
+
+        /* Bobbing Animation */
+        @keyframes bob {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-3px) rotate(-2deg); }
+            75% { transform: translateY(3px) rotate(2deg); }
+        }
+        .bobbing-machine {
+            font-size: 32px; color: var(--primary-blue);
+            animation: bob 2s infinite ease-in-out;
+            margin-bottom: 10px; display: inline-block;
+        }
+
+        .progress-bar-bg { 
+            width: 100%; height: 8px; background: #eee; 
+            border-radius: 10px; margin: 15px 0; overflow: hidden; 
+        }
+        .progress-bar-fill { 
+            height: 100%; background: var(--primary-blue); width: 45%; transition: width 1s linear;
+        }
+
+        .timer-time { font-size: 24px; font-weight: 700; margin: 5px 0; font-variant-numeric: tabular-nums; }
+        .timer-loc { font-size: 13px; color: #666; }
+
+        /* End Timer Button (Red on Hover) */
+        .btn-end {
+            margin-top: 15px; background: white; border: 1px solid #ddd; 
+            padding: 6px 14px; border-radius: 20px; color: #555; 
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-end:hover, .btn-end:active {
+            background-color: #ffebee;
+            color: #d32f2f;
+            border-color: #d32f2f;
+        }
+
+        /* Start New Timer Button (Inside Current Widget) */
+        .btn-start-embedded { 
+            width: 100%; background: var(--primary-blue); color: white; 
+            border: none; padding: 14px; border-radius: 30px; 
+            font-size: 16px; font-weight: 600; cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(48, 48, 214, 0.4); 
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-start-embedded:active { transform: scale(0.98); }
+
+        /* Upcoming List Styling */
+        .upcoming-item { 
+            display: flex; align-items: center; gap: 15px; padding: 15px 0; 
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .upcoming-item:last-child { border-bottom: none; }
+        .icon-box {
+            width: 45px; height: 45px; background: #eef2ff;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            color: var(--primary-blue); font-size: 20px;
+        }
+
+        /* Past List Styling */
+        .past-list { display: flex; flex-direction: column; gap: 0; }
+        .past-item { 
+            padding: 15px 0; 
+            border-bottom: 1px solid #f0f0f0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+        }
+        .past-item:last-child { border-bottom: none; }
+        
+        .past-left { display: flex; align-items: center; gap: 12px; }
+        .past-icon { font-size: 16px; color: #999; width: 24px; text-align: center; }
+        .past-info h4 { margin: 0; font-size: 14px; font-weight: 600; color: #333; }
+        .past-info p { margin: 2px 0 0; font-size: 12px; color: #888; }
+        .status-badge { 
+            font-size: 11px; padding: 4px 8px; border-radius: 10px; background: #f0f0f0; color: #666;
+        }
+
+        /* --- MAIN BUTTONS --- */
+        .btn-action { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 16px; border-radius: 30px; font-size: 18px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(48, 48, 214, 0.4); transition: transform 0.1s; }
+        .btn-action:active { transform: scale(0.98); }
+        
+        .btn-outline-row { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-outline { flex: 1; background: white; border: none; padding: 12px; border-radius: 25px; color: var(--text-dark); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.05); font-size: 14px; cursor: pointer; }
+
+        /* --- PROFILE TAB --- */
+        .profile-header { display: flex; align-items: center; gap: 15px; margin-bottom: 5px; }
+        .avatar-container { position: relative; width: 64px; height: 64px; }
+        .avatar { width: 100%; height: 100%; background: #e0e0e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; background: linear-gradient(135deg, #999, #666); overflow: hidden; }
+        .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Overlays */
+        .avatar-overlay { position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px; pointer-events: none; z-index: 2; border-radius: 50%; }
+        .overlay-spartan { border: 3px solid var(--msu-green); }
+        .overlay-neon { border: 3px solid #00f0ff; box-shadow: 0 0 10px #00f0ff; }
+        .overlay-leaves { border: 4px dashed #4caf50; }
+
+        .edit-btn { margin-left: auto; background: #f0f0f0; padding: 6px 14px; border-radius: 15px; font-size: 12px; font-weight: 600; color: #555; cursor: pointer; }
+        .profile-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 5px; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+        .toggle-switch { width: 44px; height: 24px; background: #ccc; border-radius: 20px; position: relative; cursor: pointer; transition: 0.3s; }
+        .toggle-switch.active { background: var(--primary-blue); }
+        .toggle-knob { width: 20px; height: 20px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .toggle-switch.active .toggle-knob { left: 22px; }
+        
+        .btn-logout { background: #d32f2f; color: white; width: 100%; padding: 14px; border: none; border-radius: 30px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 5px; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3); }
+
+        /* --- EDIT PROFILE MODAL --- */
+        .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
+        .avatar-option { width: 50px; height: 50px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; border: 2px solid transparent; }
+        .avatar-option.selected { border-color: var(--primary-blue); background: #eef2ff; }
+        .overlay-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
+        .overlay-option { width: 60px; height: 60px; background: #f9f9f9; border-radius: 12px; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; flex-direction: column; font-size: 10px; color: #666; }
+        .overlay-option.selected { border-color: var(--primary-blue); background: #eef2ff; color: var(--primary-blue); font-weight: bold; }
+
+        /* --- BOTTOM NAV --- */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); }
+        .nav-item { text-align: center; color: #aaa; font-size: 11px; flex: 1; cursor: pointer; transition: color 0.2s; }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 5px; }
+        .nav-item.active { color: var(--primary-blue); }
+
+        .empty-state { padding: 30px; text-align: center; color: #999; font-style: italic; }
+
+    </style>
+</head>
+<body>
+
+    <!-- AUTH SECTION (Hidden) -->
+    <div id="auth-section" class="hidden">
+        <div id="login-form" class="w-100 flex-center" style="flex-direction: column;">
+            <div class="brand-logo"><i class="fas fa-university"></i></div>
+            <div class="brand-text">MSU Laundry</div>
+            <div class="auth-card">
+                <div class="auth-title">Welcome Back, Spartan!</div>
+                <div class="form-group"><input type="text" class="form-input" id="login-netid" placeholder="NetID"></div>
+                <div class="form-group"><input type="password" class="form-input" id="login-pass" placeholder="Password"></div>
+                <button class="btn-msu" onclick="performLogin()">Log In</button>
+                <div class="auth-link">Forgot Password?</div>
+                <div class="auth-link" onclick="switchAuth('signup')">Don't have an account? <strong>Sign Up</strong></div>
+            </div>
+        </div>
+        <div id="signup-form" class="w-100 flex-center hidden" style="flex-direction: column;">
+            <div class="brand-logo"><i class="fas fa-university"></i></div>
+            <div class="brand-text">MSU Laundry</div>
+            <div class="auth-card">
+                <div class="auth-title">Create Your Account</div>
+                <div class="form-group"><input type="text" class="form-input" placeholder="Full Name"></div>
+                <div class="form-group"><input type="text" class="form-input" placeholder="MSU NetID"></div>
+                <button class="btn-msu" onclick="performLogin()">Sign Up</button>
+                <div class="auth-link" onclick="switchAuth('login')">Already have an account? <strong>Log In</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP SECTION -->
+    <div id="app-section"> <!-- App Inventor handles login, HTML goes straight to app -->
+        
+        <!-- *** HOME VIEW *** -->
+        <div id="view-home" class="view-screen">
+            <div class="app-container">
+                <div class="app-header">
+                    <div class="location-wrapper">
+                        <div class="location-selector" onclick="toggleDropdown()">
+                            <span id="current-hall-name">Wilson Hall</span>
+                            <i class="fas fa-chevron-down" style="font-size: 16px;"></i>
+                        </div>
+                        <div class="dropdown-menu" id="hall-dropdown"></div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px;">
+                        <span style="background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; backdrop-filter: blur(5px);">
+                            <i class="fas fa-circle" style="color: var(--status-green); font-size: 8px;"></i> 4 Washers, 2 Dryers Available
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="tabs-pill">
+                        <div class="tab-pill active" onclick="setMachineType(this, 'Washer')">Washer</div>
+                        <div class="tab-pill" onclick="setMachineType(this, 'Dryer')">Dryer</div>
+                    </div>
+
+                    <h3>Date</h3>
+                    <div class="date-scroller" id="date-list"></div>
+
+                    <h3>Time Slot</h3>
+                    <div class="time-grid" id="time-grid">
+                        <!-- Filled by JS -->
+                    </div>
+                    <div id="time-grid-message" style="text-align: center; color: #999; font-style: italic; display: none; padding: 10px;">No slots available today.</div>
+
+                    <div id="interest-message" class="interest-box"></div>
+
+                    <button class="btn-action" onclick="markInterested()">Mark As Interested</button>
+                </div>
+
+                <!-- Removed Buttons Row here -->
+            </div>
+        </div>
+
+
+        <!-- *** MY ACTIVITY VIEW (UPDATED DASHBOARD STYLE) *** -->
+        <div id="view-activity" class="view-screen hidden">
+            <div class="app-container">
+                <div class="app-header">
+                    <div class="view-title">My Activity</div>
+                </div>
+
+                <!-- NEW PILL NAV (Moved outside header to allow sticky positioning relative to container) -->
+                <div class="activity-nav">
+                    <a href="#section-current" class="activity-nav-item active">Current</a>
+                    <a href="#section-upcoming" class="activity-nav-item">Upcoming</a>
+                    <a href="#section-past" class="activity-nav-item">Past</a>
+                </div>
+
+                <!-- DASHBOARD SECTIONS -->
+                <div id="activity-dashboard">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- *** PROFILE VIEW *** -->
+        <div id="view-profile" class="view-screen hidden">
+            <div class="app-container">
+                <div class="app-header"><div class="view-title">Profile</div></div>
+                <div class="card">
+                    <div class="profile-header">
+                        <div class="avatar-container">
+                            <div class="avatar" id="profile-avatar-display">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <!-- Overlay Element -->
+                            <div id="profile-overlay-display" class="avatar-overlay"></div>
+                        </div>
+                        <div style="margin-left: 10px;">
+                            <h2 style="margin: 0; font-size: 20px;" id="profile-name-display">Alex Johnson</h2>
+                            <span style="font-size:12px; opacity:0.7;">NetID: alexj</span>
+                        </div>
+                        <div class="edit-btn" onclick="openEditProfile()">Edit</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="profile-menu-item">
+                        <span class="profile-label">Notifications</span>
+                        <div class="toggle-switch" onclick="toggleNotifications(this)" id="notif-toggle"><div class="toggle-knob"></div></div>
+                    </div>
+                    <div class="profile-menu-item"><span class="profile-label">Laundry Preferences</span></div>
+                    <div class="profile-menu-item"><span class="profile-label">Support & Help</span></div>
+                </div>
+                <div class="card"><button class="btn-logout" onclick="performLogout()">Sign Out</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="toast-notification">
+        <div class="toast-content">
+            <strong><i class="fas fa-check-circle" style="color: var(--status-green);"></i> Interest Marked!</strong><br>
+            Hey! Want to start a timer for this machine?
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+             <button class="toast-btn" onclick="goToTimerSetup()">Start Timer</button>
+             <i class="fas fa-times toast-close" onclick="document.getElementById('toast').classList.remove('show')"></i>
+        </div>
+    </div>
+
+    <!-- TIMER SETUP MODAL -->
+    <div id="timer-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="font-size: 18px; margin-bottom: 15px;">Start Washing Timer</h3>
+            
+            <label style="display:block; text-align:left; font-size:13px; color:#666; margin-bottom:5px;">Select Machine Number</label>
+            <div class="crowd-btn-group">
+                <div class="crowd-btn selected" onclick="selectMachineNum(this, 1)">#1</div>
+                <div class="crowd-btn" onclick="selectMachineNum(this, 2)">#2</div>
+                <div class="crowd-btn" onclick="selectMachineNum(this, 3)">#3</div>
+                <div class="crowd-btn" onclick="selectMachineNum(this, 4)">#4</div>
+            </div>
+
+            <label style="display:block; text-align:left; font-size:13px; color:#666; margin-top:15px;">Crowd Check: Is the room busy?</label>
+            <div class="crowd-btn-group">
+                <div class="crowd-btn" onclick="selectCrowd(this, 'empty')" style="border-color: var(--status-green); color: var(--status-green);">
+                    <i class="fas fa-user"></i> Empty
+                </div>
+                <div class="crowd-btn" onclick="selectCrowd(this, 'busy')" style="border-color: var(--status-yellow); color: var(--status-yellow);">
+                    <i class="fas fa-users"></i> Busy
+                </div>
+                <div class="crowd-btn" onclick="selectCrowd(this, 'full')" style="border-color: var(--status-red); color: var(--status-red);">
+                    <i class="fas fa-ban"></i> Full
+                </div>
+            </div>
+
+            <label style="display:block; text-align:left; font-size:13px; color:#666; margin-top:15px;">Timer Duration (mins)</label>
+            <div class="timer-input-group">
+                <button onclick="adjustTimer(-5)" style="padding:5px 10px;">-</button>
+                <input type="number" id="timer-duration" class="timer-input" value="45">
+                <button onclick="adjustTimer(5)" style="padding:5px 10px;">+</button>
+            </div>
+
+            <button class="btn-action" style="margin-top:15px;" onclick="confirmStartTimer()">Start Wash</button>
+            <button class="btn-outline" style="margin-top:10px; padding:10px; border:none; box-shadow:none;" onclick="closeTimerModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div id="edit-profile-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="font-size: 18px; margin-bottom: 10px;">Edit Profile</h3>
+            
+            <!-- Avatar Section -->
+            <label style="display:block; text-align:left; font-size:13px; color:#666;">Choose Avatar</label>
+            <div class="avatar-grid">
+                <div class="avatar-option selected" onclick="selectEditAvatar(this, 'icon', 'fas fa-user')"><i class="fas fa-user"></i></div>
+                <div class="avatar-option" onclick="selectEditAvatar(this, 'icon', 'fas fa-robot')"><i class="fas fa-robot"></i></div>
+                <div class="avatar-option" onclick="selectEditAvatar(this, 'icon', 'fas fa-cat')"><i class="fas fa-cat"></i></div>
+                <div class="avatar-option" onclick="selectEditAvatar(this, 'icon', 'fas fa-dragon')"><i class="fas fa-dragon"></i></div>
+                <div class="avatar-option" onclick="document.getElementById('upload-avatar').click()"><i class="fas fa-camera"></i></div>
+            </div>
+            <input type="file" id="upload-avatar" style="display:none;" onchange="handleFileUpload(this)">
+
+            <!-- Overlay Section -->
+            <label style="display:block; text-align:left; font-size:13px; color:#666; margin-top:10px;">Profile Decoration</label>
+            <div class="overlay-grid">
+                <div class="overlay-option selected" onclick="selectOverlay(this, 'none')">None</div>
+                <div class="overlay-option" onclick="selectOverlay(this, 'overlay-spartan')">Spartan</div>
+                <div class="overlay-option" onclick="selectOverlay(this, 'overlay-neon')">Neon</div>
+                <div class="overlay-option" onclick="selectOverlay(this, 'overlay-leaves')">Eco</div>
+            </div>
+
+            <!-- Details -->
+            <div style="margin-top: 15px; text-align: left;">
+                <label style="font-size:12px; color:#666;">Full Name</label>
+                <input type="text" id="edit-name-input" value="Alex Johnson" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
+                <label style="font-size:12px; color:#666;">NetID</label>
+                <input type="text" value="alexj" disabled style="width:100%; padding:8px; border:1px solid #ddd; border-radius:8px; background:#f5f5f5;">
+            </div>
+
+            <button class="btn-action" style="margin-top:15px; padding:12px;" onclick="saveProfile()">Save Changes</button>
+            <button class="btn-outline" style="margin-top:5px; padding:10px; border:none; box-shadow:none;" onclick="closeEditProfile()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="navTo('home')"><i class="fas fa-home"></i> Home</div>
+        <div class="nav-item" onclick="navTo('activity')"><i class="fas fa-stopwatch"></i> My Activity</div>
+        <div class="nav-item" onclick="navTo('profile')"><i class="fas fa-user"></i> Profile</div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        const halls = ["Case Hall", "Holden Hall", "Wilson Hall", "Wonders Hall", "Akers Hall", "Holmes Hall", "Hubbard Hall", "McDonel Hall", "Owen Hall", "Shaw Hall", "Van Hoosen Hall", "Abbot Hall", "Campbell Hall", "Gilchrist Hall", "Landon Hall", "Mason Hall", "Mayo Hall", "Phillips Hall", "Snyder Hall", "Williams Hall", "Yakeley Hall"];
+        
+        let state = {
+            currentDate: new Date(),
+            machineType: 'Washer',
+            interests: [], 
+            timers: [],
+            tempTimer: { machine: 1, duration: 45, crowd: null },
+            user: {
+                name: "Alex Johnson",
+                avatarType: 'icon', // 'icon' or 'image'
+                avatarVal: 'fas fa-user',
+                overlay: 'none'
+            }
+        };
+
+        let timerInterval = null;
+
+        // --- INIT ---
+        window.onload = function() {
+            populateDropdown();
+            renderDateScroller();
+            renderTimeSlots(); // Initial render
+            
+            // Dummy Interest
+            if(state.interests.length === 0) {
+                state.interests.push({ hall: "Wilson Hall", type: "Dryer", date: "Tomorrow", time: "4:00 PM" });
+            }
+
+            // Start global timer loop
+            timerInterval = setInterval(updateTimers, 1000);
+            
+            // Check Notification state for toggle
+            if(Notification.permission === 'granted') {
+                document.getElementById('notif-toggle').classList.add('active');
+            }
+        };
+
+        // --- NAVIGATION ---
+        function navTo(viewName) {
+            document.querySelectorAll('.view-screen').forEach(el => el.classList.add('hidden'));
+            document.getElementById('view-' + viewName).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const index = viewName === 'home' ? 0 : viewName === 'activity' ? 1 : 2;
+            document.querySelectorAll('.nav-item')[index].classList.add('active');
+
+            if(viewName === 'activity') renderActivityDashboard();
+        }
+
+        // --- HOME LOGIC ---
+        function populateDropdown() {
+            const dd = document.getElementById('hall-dropdown');
+            halls.forEach(hall => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.innerText = hall;
+                item.onclick = () => {
+                    document.getElementById('current-hall-name').innerText = hall;
+                    toggleDropdown();
+                };
+                dd.appendChild(item);
+            });
+        }
+        function toggleDropdown() { document.getElementById('hall-dropdown').classList.toggle('show'); }
+        function setMachineType(el, type) {
+            document.querySelectorAll('.tab-pill').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            state.machineType = type;
+        }
+
+        // Date & Time
+        function renderDateScroller() {
+            const container = document.getElementById('date-list');
+            container.innerHTML = '';
+            const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = new Date();
+            for(let i=0; i<6; i++) {
+                let d = new Date(today);
+                d.setDate(today.getDate() + i);
+                let label = i === 0 ? "Today" : daysShort[d.getDay()];
+                // Reset time components for clean comparison
+                d.setHours(0,0,0,0);
+                const compareStateDate = new Date(state.currentDate);
+                compareStateDate.setHours(0,0,0,0);
+
+                let isSelected = d.getTime() === compareStateDate.getTime();
+                let el = document.createElement('div');
+                el.className = `date-card ${isSelected ? 'active' : ''}`;
+                el.innerHTML = `<div class="date-day">${label}</div><div class="date-num">${d.getDate()}</div>`;
+                el.onclick = () => {
+                    document.querySelectorAll('.date-card').forEach(c => c.classList.remove('active'));
+                    el.classList.add('active');
+                    state.currentDate = d;
+                    renderTimeSlots(); // Re-render times when date changes
+                    document.getElementById('interest-message').style.display = 'none'; // Hide old interest msg
+                };
+                container.appendChild(el);
+            }
+            
+            // Calendar Button
+            let calBtn = document.createElement('div');
+            calBtn.className = 'date-card';
+            calBtn.style.position = 'relative';
+            calBtn.innerHTML = `
+              <div class="date-day">More</div>
+              <div class="date-num"><i class="far fa-calendar-alt"></i></div>
+              <input type="date"
+                style="position:absolute; inset:0; width:100%; height:100%; opacity:0.01; cursor:pointer; z-index:5;"
+              >
+            `;
+            const dateInput = calBtn.querySelector('input');
+            calBtn.addEventListener('click', () => {
+              if (dateInput.showPicker) dateInput.showPicker();
+              else dateInput.click();
+            });
+            dateInput.addEventListener('change', (e) => {
+              if (e.target.value) {
+                const [y, m, d] = e.target.value.split('-').map(Number);
+                state.currentDate = new Date(y, m - 1, d);
+                // We also need to visually select this logic, but for simplicity we rely on re-rendering
+                renderDateScroller(); 
+                renderTimeSlots();
+              }
+            });
+            container.appendChild(calBtn);
+        }
+
+        // DYNAMIC TIME SLOT GENERATION
+        function renderTimeSlots() {
+            const container = document.getElementById('time-grid');
+            container.innerHTML = '';
+            const msg = document.getElementById('time-grid-message');
+            msg.style.display = 'none';
+
+            const now = new Date();
+            const selected = new Date(state.currentDate);
+            
+            // Normalize dates for comparison (ignore time)
+            const isToday = now.toDateString() === selected.toDateString();
+            
+            let startHour = 0;
+            let startMin = 0;
+
+            if (isToday) {
+                const h = now.getHours();
+                const m = now.getMinutes();
+                // Round up to next 30 min slot
+                if (m < 30) {
+                    startHour = h;
+                    startMin = 30;
+                } else {
+                    startHour = h + 1;
+                    startMin = 0;
+                }
+            } else {
+                // Future day: Start at midnight (or could do 6am for realism, lets do 00:00)
+                startHour = 0;
+                startMin = 0;
+            }
+
+            let slotsAdded = 0;
+
+            for (let h = startHour; h < 24; h++) {
+                // If it's the start hour, respect the startMin. Otherwise start at 00.
+                let m = (h === startHour) ? startMin : 0;
+                
+                for (; m < 60; m += 30) {
+                    // Format time
+                    let ampm = h >= 12 ? 'PM' : 'AM';
+                    let dispH = h % 12;
+                    dispH = dispH ? dispH : 12; // the hour '0' should be '12'
+                    let dispM = m < 10 ? '0'+m : m;
+                    let timeStr = `${dispH}:${dispM} ${ampm}`;
+
+                    let el = document.createElement('div');
+                    el.className = 'time-slot';
+                    el.innerText = timeStr;
+                    el.onclick = function() { selectTime(this) };
+                    container.appendChild(el);
+                    slotsAdded++;
+                }
+            }
+
+            if (slotsAdded === 0) {
+                msg.style.display = 'block';
+            }
+        }
+        
+        function selectTime(el) {
+            document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            const msg = document.getElementById('interest-message');
+            const count = Math.floor(Math.random() * 5); 
+            msg.style.display = 'block';
+            msg.innerHTML = count === 0 ? `<i class="fas fa-check-circle"></i> No one else is viewing this.` : `<i class="fas fa-user-friends"></i> <strong>${count} others</strong> interested.`;
+        }
+        
+        function markInterested() {
+            const timeEl = document.querySelector('.time-slot.active');
+            if(!timeEl) { alert("Please pick a time."); return; }
+            const hall = document.getElementById('current-hall-name').innerText;
+            state.interests.push({
+                hall: hall,
+                type: state.machineType,
+                date: state.currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                time: timeEl.innerText
+            });
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 5000); 
+
+            // Ask for Notification permission implicitly here too if they like
+            if("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+        }
+
+        // --- TIMER LOGIC ---
+        function goToTimerSetup() { document.getElementById('toast').classList.remove('show'); openTimerModal(); }
+        function openTimerModal() { document.getElementById('timer-modal').classList.add('show'); }
+        function closeTimerModal() { document.getElementById('timer-modal').classList.remove('show'); }
+        function selectMachineNum(el, num) {
+            state.tempTimer.machine = num;
+            document.querySelectorAll('.crowd-btn-group .crowd-btn.selected').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+        function selectCrowd(el, level) {
+            state.tempTimer.crowd = level;
+            const sibs = el.parentElement.children;
+            for(let s of sibs) s.style.background = '#f9f9f9';
+            el.style.background = '#eee'; 
+        }
+        function adjustTimer(amt) {
+            const inp = document.getElementById('timer-duration');
+            let val = parseInt(inp.value) + amt;
+            if(val < 1) val = 1; // Min 1 min
+            inp.value = val;
+        }
+
+        function confirmStartTimer() {
+            // Ask for notification permission if not granted
+            if("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission().then(permission => {
+                    if(permission === 'granted') {
+                        document.getElementById('notif-toggle').classList.add('active');
+                    }
+                });
+            }
+
+            const durationMins = parseInt(document.getElementById('timer-duration').value);
+            // Calculate End Time
+            const now = Date.now();
+            const endTime = now + (durationMins * 60 * 1000);
+
+            state.timers.unshift({
+                id: now, // unique ID
+                machine: state.tempTimer.machine,
+                type: state.machineType,
+                durationTotal: durationMins * 60, // in seconds
+                endTime: endTime,
+                hall: document.getElementById('current-hall-name').innerText,
+                finished: false
+            });
+            closeTimerModal();
+            navTo('activity');
+        }
+
+        function endTimer(id) {
+            if(confirm("Are you sure you want to end this cycle?")) {
+                state.timers = state.timers.filter(t => t.id !== id);
+                renderActivityDashboard();
+            }
+        }
+
+        function updateTimers() {
+            if(state.timers.length === 0) return;
+
+            const now = Date.now();
+            let needsRender = false;
+
+            state.timers.forEach(timer => {
+                if(timer.finished) return;
+
+                const diff = timer.endTime - now;
+                const elTime = document.getElementById(`timer-display-${timer.id}`);
+                const elBar = document.getElementById(`timer-bar-${timer.id}`);
+
+                if(diff <= 0) {
+                    // Timer finished
+                    timer.finished = true;
+                    if(elTime) elTime.innerText = "Cycle Complete";
+                    if(elBar) elBar.style.width = "100%";
+                    if(elBar) elBar.style.backgroundColor = "var(--status-green)";
+                    
+                    // Send Notification
+                    if(Notification.permission === 'granted') {
+                        new Notification("Laundry Done!", {
+                            body: `Your ${timer.type} in ${timer.hall} has finished.`,
+                            icon: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/svgs/solid/tshirt.svg"
+                        });
+                    }
+                } else {
+                    // Timer Running
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    const timeStr = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                    
+                    if(elTime) elTime.innerText = timeStr;
+                    
+                    // Update Bar
+                    if(elBar) {
+                        const totalSecs = timer.durationTotal;
+                        const remainingSecs = diff / 1000;
+                        const pct = 100 - ((remainingSecs / totalSecs) * 100);
+                        elBar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+                    }
+                }
+            });
+        }
+
+        // --- ACTIVITY VIEW (NEW DASHBOARD LOGIC) ---
+        function renderActivityDashboard() {
+            const dashboard = document.getElementById('activity-dashboard');
+            dashboard.innerHTML = ''; 
+
+            // 1. CURRENT SECTION
+            let currentHtml = `
+            <div id="section-current" class="section-wrapper">
+                <div class="section-header"><i class="fas fa-bolt"></i> Current Status</div>
+                <div class="card">`;
+            
+            const activeTimers = state.timers.filter(t => !t.finished);
+            
+            if (activeTimers.length > 0) {
+                 activeTimers.forEach(timer => {
+                    // Calculate initial state for render
+                    const diff = timer.endTime - Date.now();
+                    const mins = Math.floor(diff / 60000);
+                    const secs = Math.floor((diff % 60000) / 1000);
+                    const timeStr = diff > 0 ? `${mins}:${secs < 10 ? '0' : ''}${secs}` : "Cycle Complete";
+                    
+                    currentHtml += `
+                    <div class="active-timer-card">
+                        <div class="timer-badge">Machine #${timer.machine}</div>
+                        <div class="bobbing-machine"><i class="fas fa-tshirt"></i></div>
+                        <h3 style="margin:0; font-size:16px;">${timer.type} Cycle</h3>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="timer-bar-${timer.id}" style="width: 0%"></div>
+                        </div>
+                        <div class="timer-time" id="timer-display-${timer.id}">${timeStr}</div>
+                        <div class="timer-loc">${timer.hall}</div>
+                        <button class="btn-end" onclick="endTimer(${timer.id})">End Timer</button>
+                    </div>`;
+                });
+            } else {
+                currentHtml += `<div class="empty-state">No active machines.</div>`;
+            }
+            // Embed Start Button Inside Current Section
+            currentHtml += `
+                    <button class="btn-start-embedded" onclick="openTimerModal()">
+                        <i class="fas fa-plus-circle"></i> Start New Timer
+                    </button>
+                </div>
+            </div>`;
+
+            // 2. UPCOMING SECTION
+            let upcomingHtml = `
+            <div id="section-upcoming" class="section-wrapper">
+                <div class="section-header"><i class="fas fa-calendar-alt"></i> Upcoming Plans</div>
+                <div class="card">`;
+            
+            if (state.interests.length > 0) {
+                state.interests.forEach(int => {
+                    upcomingHtml += `
+                    <div class="upcoming-item">
+                        <div class="icon-box"><i class="fas fa-bell"></i></div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 15px; color: #333;">${int.type} Interest</div>
+                            <div style="color: #666; font-size: 13px;">${int.date} at ${int.time}</div>
+                            <div style="color: #999; font-size: 12px;">${int.hall}</div>
+                        </div>
+                        <div><i class="fas fa-chevron-right" style="color: #ccc; font-size: 14px;"></i></div>
+                    </div>`;
+                });
+            } else {
+                upcomingHtml += `<div class="empty-state">No reservations found.</div>`;
+            }
+            upcomingHtml += `</div></div>`;
+
+            // 3. PAST SECTION (Include finished timers here ideally, but for now hardcoded + finished logic)
+            let pastHtml = `
+            <div id="section-past" class="section-wrapper">
+                <div class="section-header"><i class="fas fa-history"></i> History</div>
+                <div class="card">
+                    <div class="past-list">`;
+            
+            // Add finished timers to history list for this session
+            state.timers.filter(t => t.finished).forEach(t => {
+                 pastHtml += `
+                        <div class="past-item">
+                            <div class="past-left">
+                                <i class="fas fa-check-circle past-icon" style="color:var(--status-green)"></i>
+                                <div class="past-info">
+                                    <h4>${t.type} Cycle</h4>
+                                    <p>Just now • ${t.hall}</p>
+                                </div>
+                            </div>
+                            <div class="status-badge">Completed</div>
+                        </div>`;
+            });
+
+            pastHtml += `
+                        <div class="past-item">
+                            <div class="past-left">
+                                <i class="fas fa-socks past-icon"></i>
+                                <div class="past-info">
+                                    <h4>Dryer Cycle</h4>
+                                    <p>Yesterday • Wilson Hall</p>
+                                </div>
+                            </div>
+                            <div class="status-badge">Completed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            dashboard.innerHTML = currentHtml + upcomingHtml + pastHtml;
+        }
+
+        // --- PROFILE & NOTIFICATIONS ---
+        function performLogout() {
+            window.AppInventor.setWebViewString("LOGOUT");
+        }
+        function switchAuth(s) { document.getElementById(s === 'login' ? 'signup-form' : 'login-form').classList.add('hidden'); document.getElementById(s + '-form').classList.remove('hidden'); }
+        function performLogin() { document.getElementById('auth-section').classList.add('hidden'); document.getElementById('app-section').classList.remove('hidden'); navTo('home'); }
+        
+        function toggleNotifications(el) {
+            if(!el.classList.contains('active')) {
+                // Request Permission
+                if("Notification" in window) {
+                    Notification.requestPermission().then(permission => {
+                        if(permission === "granted") {
+                            el.classList.add('active');
+                            alert("Great! Notifications enabled.");
+                        } else {
+                            alert("Notifications were denied. Please enable them in browser settings.");
+                        }
+                    });
+                } else {
+                    alert("This browser does not support notifications.");
+                    el.classList.add('active'); // Just visually enable for demo
+                }
+            } else {
+                el.classList.remove('active');
+            }
+        }
+
+        // --- EDIT PROFILE LOGIC ---
+        let tempProfile = { ...state.user };
+
+        function openEditProfile() {
+            document.getElementById('edit-profile-modal').classList.add('show');
+            document.getElementById('edit-name-input').value = state.user.name;
+            // Reset selection visuals
+            document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+            document.querySelectorAll('.overlay-option').forEach(o => o.classList.remove('selected'));
+            // Highlight current (simplified logic for demo)
+            document.querySelectorAll('.overlay-option')[state.user.overlay === 'none' ? 0 : 1].classList.add('selected'); 
+        }
+
+        function closeEditProfile() {
+            document.getElementById('edit-profile-modal').classList.remove('show');
+        }
+
+        function selectEditAvatar(el, type, val) {
+            document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            tempProfile.avatarType = type;
+            tempProfile.avatarVal = val;
+        }
+
+        function handleFileUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempProfile.avatarType = 'image';
+                    tempProfile.avatarVal = e.target.result;
+                    // Visually select the camera icon
+                    document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+                    input.previousElementSibling.classList.add('selected');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function selectOverlay(el, overlayClass) {
+            document.querySelectorAll('.overlay-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            tempProfile.overlay = overlayClass;
+        }
+
+        function saveProfile() {
+            state.user.name = document.getElementById('edit-name-input').value;
+            state.user.avatarType = tempProfile.avatarType;
+            state.user.avatarVal = tempProfile.avatarVal;
+            state.user.overlay = tempProfile.overlay;
+
+            // Update UI
+            document.getElementById('profile-name-display').innerText = state.user.name;
+            const avatarDiv = document.getElementById('profile-avatar-display');
+            
+            if(state.user.avatarType === 'image') {
+                avatarDiv.innerHTML = `<img src="${state.user.avatarVal}" class="avatar-img">`;
+            } else {
+                avatarDiv.innerHTML = `<i class="${state.user.avatarVal}"></i>`;
+            }
+
+            // Apply Overlay
+            const overlayDiv = document.getElementById('profile-overlay-display');
+            overlayDiv.className = 'avatar-overlay ' + (state.user.overlay !== 'none' ? state.user.overlay : '');
+            
+            closeEditProfile();
+        }
+
+    </script>
+</body>
+</html>
